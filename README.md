@@ -1,4 +1,4 @@
 Main branch
 
 # road_to_dev_ops
-Projet commun avec wanis pour apprendre les base de devops
+La db de base est prete a etre lancer - Il faudra preciser quel table cree et le mettre en place.
