@@ -8,5 +8,5 @@
     backend, database)
 -   Create docker compose that links db to the backend
 -   Configure postresql
--   delete backend/dockerfile.dev
+-   delete backend/dockerfile.dev + delete db/docker-compose
 -   Configurer mangoDB
