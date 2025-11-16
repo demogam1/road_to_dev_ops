@@ -1,6 +1,22 @@
 # Use postgres/example user/password credentials
 
 services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+  frontend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
   db:
     image: postgres
     restart: always
@@ -11,8 +27,8 @@ services:
       POSTGRES_USER: admin
       POSTGRES_DB: rtdv # database name
     volumes:
-      - ./db_vol:/var/lib/postgresql
-      - ./initdb.sh:/docker-entrypoint-initdb.d/initdb.sh    
+      - .db/db_vol:/var/lib/postgresql
+      - .db/initdb.sh:/docker-entrypoint-initdb.d/initdb.sh    
   adminer:
     image: adminer
     restart: always
