@@ -1,0 +1,92 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model audit_log {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id    String?  @db.Uuid
+  action     String
+  target_id  String?  @db.Uuid
+  details    Json?
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  users      users?   @relation(fields: [user_id], references: [id], onUpdate: NoAction)
+
+  @@index([created_at], map: "idx_audit_date")
+  @@index([user_id], map: "idx_audit_user")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model todo_list_permissions {
+  id         String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  list_id    String     @db.Uuid
+  user_id    String     @db.Uuid
+  role       String
+  created_at DateTime   @default(now()) @db.Timestamptz(6)
+  todo_lists todo_lists @relation(fields: [list_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users      users      @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([list_id, user_id])
+  @@index([user_id], map: "idx_permissions_user")
+}
+
+model todo_lists {
+  id                    String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  owner_id              String                  @db.Uuid
+  title                 String
+  created_at            DateTime                @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime                @default(now()) @db.Timestamptz(6)
+  todo_list_permissions todo_list_permissions[]
+  users                 users                   @relation(fields: [owner_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  todos                 todos[]
+
+  @@index([owner_id], map: "idx_todo_lists_owner")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model todos {
+  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  list_id     String     @db.Uuid
+  title       String
+  description String?
+  status      String     @default("todo")
+  priority    Int        @default(3) @db.SmallInt
+  due_at      DateTime?  @db.Timestamptz(6)
+  created_at  DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime   @default(now()) @db.Timestamptz(6)
+  todo_lists  todo_lists @relation(fields: [list_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([list_id], map: "idx_todos_list")
+}
+
+model user_sessions {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id    String   @db.Uuid
+  token_hash String
+  user_agent String?
+  ip_address String?
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  expires_at DateTime @db.Timestamptz(6)
+  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([expires_at], map: "idx_user_sessions_expires")
+  @@index([user_id], map: "idx_user_sessions_user")
+}
+
+model users {
+  id                    String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email                 String                  @unique
+  password              String
+  firstname             String?
+  lastname              String?
+  created_at            DateTime                @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime                @default(now()) @db.Timestamptz(6)
+  audit_log             audit_log[]
+  todo_list_permissions todo_list_permissions[]
+  todo_lists            todo_lists[]
+  user_sessions         user_sessions[]
+}

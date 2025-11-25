@@ -2,22 +2,31 @@
 
 services:
   backend:
+    container_name: backend
     build:
       context: ./backend
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - 3000:3000
     depends_on:
       - db
+    networks:
+      - app-network
+    volumes:
+      - ./backend/prisma:/usr/src/app/prisma
   frontend:
+    container_name: frontend
     build:
-      context: ./backend
+      context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - "5173:5173"
+      - 5173:5173
     depends_on:
       - backend
+    networks:
+      - app-network
   db:
+    container_name: db
     image: postgres
     restart: always
     # set shared memory limit when using docker compose
@@ -27,10 +36,12 @@ services:
       POSTGRES_USER: admin
       POSTGRES_DB: rtdv # database name
     volumes:
-      - .db/db_vol:/var/lib/postgresql
-      - .db/initdb.sh:/docker-entrypoint-initdb.d/initdb.sh    
-  adminer:
-    image: adminer
-    restart: always
+      - ./db/db_vol:/var/lib/postgresql
+      - ./db/initdb.sh:/docker-entrypoint-initdb.d/initdb.sh    
     ports:
-      - 8080:8080
+      - 5432:5432
+    networks:
+      - app-network
+
+networks:
+  app-network:
